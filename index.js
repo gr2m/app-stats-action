@@ -19,7 +19,7 @@ async function main() {
     core.setOutput("popular_repositories", JSON.stringify(popularRepositories));
     console.log("done.");
   } catch (error) {
-    console.error(error);
-    process.exit(1);
+    core.error(error);
+    core.setFailed(error.message);
   }
 }
