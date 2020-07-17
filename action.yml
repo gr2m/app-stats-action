@@ -7,7 +7,7 @@ inputs:
   id:
     description: "App ID"
     required: true
-  privateKey:
+  private_key:
     description: "contents of the app's *.pem private key file."
     required: true
 outputs:
