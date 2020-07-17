@@ -1,0 +1,20 @@
+name: GitHub App Statistics
+description: "Retrieve statistics for a GitHub App"
+branding:
+  icon: "bar-chart-2"
+  color: purple
+inputs:
+  id:
+    description: "App ID"
+    required: true
+  private_key:
+    description: "contents of the app's *.pem private key file."
+    required: true
+outputs:
+  installations:
+    descriptions: "Number of installations"
+  popular_repositories:
+    descriptions: "JSON string for user/organization login and total number of stars of public repositories the app is installed on"
+runs:
+  using: "node12"
+  main: "dist/index.js"
