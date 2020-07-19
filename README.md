@@ -21,7 +21,7 @@ jobs:
         id: stats
         with:
           id: ${{ secrets.APP_ID }}
-          privateKey: ${{ secrets.PRIVATE_KEY }}
+          private_key: ${{ secrets.PRIVATE_KEY }}
       - run: "echo installations: '${{ steps.stats.outputs.installations }}'"
       - run: "echo most popular repositories: '${{ steps.stats.outputs.popular_repositories }}'"
 ```
