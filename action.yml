@@ -12,9 +12,9 @@ inputs:
     required: true
 outputs:
   installations:
-    descriptions: "Number of installations"
+    description: "Number of installations"
   popular_repositories:
-    descriptions: "JSON string for user/organization login and total number of stars of public repositories the app is installed on"
+    description: "JSON string for user/organization login and total number of stars of public repositories the app is installed on"
 runs:
   using: "node12"
   main: "dist/index.js"
