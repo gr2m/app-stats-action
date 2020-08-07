@@ -1053,6 +1053,12 @@ async function get(cache, options) {
   }
 
   const [token, createdAt, expiresAt, repositorySelection, permissionsString, singleFileName] = result.split("|");
+  /* istanbul ignore if - this is to debug an exception we see in production */
+
+  if (!options.permissions && typeof permissionsString === "undefined") {
+    throw new Error(`[@octokit/auth-app] Invalid cache. Key: ${cacheKey}. Result: ${result}`);
+  }
+
   const permissions = options.permissions || permissionsString.split(/,/).reduce((permissions, string) => {
     if (/!$/.test(string)) {
       permissions[string.slice(0, -1)] = "write";
@@ -1249,7 +1255,7 @@ async function auth(state, options) {
   return getOAuthAuthentication(state, options);
 }
 
-const PATHS = ["/app", "/app/installations", "/app/installations/:installation_id", "/app/installations/:installation_id", "/app/installations/:installation_id/access_tokens", "/orgs/:org/installation", "/orgs/:org/installation", "/repos/:owner/:repo/installation", "/repos/:owner/:repo/installation", "/users/:username/installation", "/users/:username/installation"]; // CREDIT: Simon Grondin (https://github.com/SGrondin)
+const PATHS = ["/app", "/app/installations", "/app/installations/:installation_id", "/app/installations/:installation_id/access_tokens", "/marketplace_listing/accounts/:account_id", "/marketplace_listing/plan", "/marketplace_listing/plans/:plan_id/accounts", "/marketplace_listing/stubbed/accounts/:account_id", "/marketplace_listing/stubbed/plan", "/marketplace_listing/stubbed/plans/:plan_id/accounts", "/orgs/:org/installation", "/repos/:owner/:repo/installation", "/users/:username/installation"]; // CREDIT: Simon Grondin (https://github.com/SGrondin)
 // https://github.com/octokit/plugin-throttling.js/blob/45c5d7f13b8af448a9dbca468d9c9150a73b3948/lib/route-matcher.js
 
 function routeMatcher(paths) {
@@ -1331,7 +1337,7 @@ async function sendRequestWithRetries(request, options, createdAt, retries = 0) 
   }
 }
 
-const VERSION = "2.4.11";
+const VERSION = "2.4.13";
 
 const createAppAuth = function createAppAuth(options) {
   const state = Object.assign({
@@ -5095,7 +5101,7 @@ function _objectSpread2(target) {
   return target;
 }
 
-const VERSION = "3.1.1";
+const VERSION = "3.1.2";
 
 class Octokit {
   constructor(options = {}) {
