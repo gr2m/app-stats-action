@@ -23,6 +23,7 @@ jobs:
           id: ${{ secrets.APP_ID }}
           private_key: ${{ secrets.PRIVATE_KEY }}
       - run: "echo installations: '${{ steps.stats.outputs.installations }}'"
+      - run: "echo suspended: '${{ steps.stats.outputs.suspendedInstallations }}'"
       - run: "echo most popular repositories: '${{ steps.stats.outputs.popular_repositories }}'"
 ```
 
