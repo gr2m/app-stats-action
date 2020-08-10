@@ -1053,12 +1053,6 @@ async function get(cache, options) {
   }
 
   const [token, createdAt, expiresAt, repositorySelection, permissionsString, singleFileName] = result.split("|");
-  /* istanbul ignore if - this is to debug an exception we see in production */
-
-  if (!options.permissions && typeof permissionsString === "undefined") {
-    throw new Error(`[@octokit/auth-app] Invalid cache. Key: ${cacheKey}. Result: ${result}`);
-  }
-
   const permissions = options.permissions || permissionsString.split(/,/).reduce((permissions, string) => {
     if (/!$/.test(string)) {
       permissions[string.slice(0, -1)] = "write";
@@ -1081,7 +1075,7 @@ async function get(cache, options) {
 async function set(cache, options, data) {
   const key = optionsToCacheKey(options);
   const permissionsString = options.permissions ? "" : Object.keys(data.permissions).map(name => `${name}${data.permissions[name] === "write" ? "!" : ""}`).join(",");
-  const value = [data.token, data.createdAt, data.expiresAt, data.repositorySelection, permissionsString, data.singleFileName].join("|").replace(/\|+$/, "");
+  const value = [data.token, data.createdAt, data.expiresAt, data.repositorySelection, permissionsString, data.singleFileName].join("|");
   await cache.set(key, value);
 }
 
@@ -1337,7 +1331,7 @@ async function sendRequestWithRetries(request, options, createdAt, retries = 0) 
   }
 }
 
-const VERSION = "2.4.13";
+const VERSION = "2.4.14";
 
 const createAppAuth = function createAppAuth(options) {
   const state = Object.assign({
