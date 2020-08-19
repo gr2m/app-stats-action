@@ -17,6 +17,7 @@ async function main() {
     });
     core.setOutput("installations", installations);
     core.setOutput("popular_repositories", JSON.stringify(popularRepositories));
+    core.setOutput("stats", JSON.stringify({ installations, popular: popularRepositories }));
     console.log("done.");
   } catch (error) {
     core.error(error);
