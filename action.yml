@@ -17,6 +17,8 @@ outputs:
     description: "Number of suspended installations"
   popular_repositories:
     description: "JSON string for user/organization login and total number of stars of public repositories the app is installed on"
+  stats:
+    description: "JSON string that match output of /probot/stats"
 runs:
   using: "node12"
   main: "dist/index.js"
