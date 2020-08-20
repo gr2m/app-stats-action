@@ -13,6 +13,8 @@ inputs:
 outputs:
   installations:
     description: "Number of installations"
+  repositories:
+    description: "Number of repositories"
   suspended_installations:
     description: "Number of suspended installations"
   popular_repositories:
