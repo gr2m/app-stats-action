@@ -13,7 +13,7 @@ inputs:
 outputs:
   installations:
     description: "Number of installations"
-  suspendedInstallations:
+  suspended_installations:
     description: "Number of suspended installations"
   popular_repositories:
     description: "JSON string for user/organization login and total number of stars of public repositories the app is installed on"
