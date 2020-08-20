@@ -282,6 +282,7 @@ async function main() {
   try {
     const {
       installations,
+      repositories,
       popularRepositories,
       suspendedInstallations,
     } = await getAppStats({
@@ -289,6 +290,7 @@ async function main() {
       privateKey,
     });
     core.setOutput("installations", installations);
+    core.setOutput("repositories", repositories);
     core.setOutput("popular_repositories", JSON.stringify(popularRepositories));
     core.setOutput("suspended_installations", suspendedInstallations);
     console.log("done.");
@@ -9606,6 +9608,7 @@ async function getAppStats({ id, privateKey }) {
     );
 
     const accounts = [];
+    let installedRepositories = 0;
     let suspendedInstallations = 0;
     for (const installation of installations) {
       if (installation.suspended) {
@@ -9643,11 +9646,13 @@ async function getAppStats({ id, privateKey }) {
         }, 0);
 
       accounts.push({ ...installation, stars });
+      installedRepositories += repositories.length;
     }
 
     console.log("");
     return {
       installations: accounts.length + suspendedInstallations,
+      repositories: installedRepositories,
       suspendedInstallations,
       popularRepositories: accounts
         .sort((a, b) => b.stars - a.stars)
