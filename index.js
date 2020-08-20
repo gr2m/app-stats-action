@@ -13,6 +13,7 @@ async function main() {
   try {
     const {
       installations,
+      repositories,
       popularRepositories,
       suspendedInstallations,
     } = await getAppStats({
@@ -20,6 +21,7 @@ async function main() {
       privateKey,
     });
     core.setOutput("installations", installations);
+    core.setOutput("repositories", repositories);
     core.setOutput("popular_repositories", JSON.stringify(popularRepositories));
     core.setOutput("suspended_installations", suspendedInstallations);
     console.log("done.");
