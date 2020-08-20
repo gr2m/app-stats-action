@@ -280,12 +280,17 @@ async function main() {
     .replace(/\\n/g, "\n");
 
   try {
-    const { installations, popularRepositories } = await getAppStats({
+    const {
+      installations,
+      popularRepositories,
+      suspendedInstallations,
+    } = await getAppStats({
       id,
       privateKey,
     });
     core.setOutput("installations", installations);
     core.setOutput("popular_repositories", JSON.stringify(popularRepositories));
+    core.setOutput("suspended_installations", suspendedInstallations);
     console.log("done.");
   } catch (error) {
     core.error(error);
