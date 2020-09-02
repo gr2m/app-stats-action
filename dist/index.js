@@ -1289,7 +1289,7 @@ function requiresAppAuth(url) {
   return !!url && REGEX.test(url);
 }
 
-const SIXTY_SECONDS_IN_MS = 60 * 1000;
+const FIVE_SECONDS_IN_MS = 5 * 1000;
 async function hook(state, request, route, parameters) {
   let endpoint = request.endpoint.merge(route, parameters);
 
@@ -1326,19 +1326,19 @@ async function sendRequestWithRetries(request, options, createdAt, retries = 0) 
       throw error;
     }
 
-    if (timeSinceTokenCreationInMs >= SIXTY_SECONDS_IN_MS) {
+    if (timeSinceTokenCreationInMs >= FIVE_SECONDS_IN_MS) {
       throw error;
     }
 
     ++retries;
-    const awaitTime = retries * retries * 1000;
+    const awaitTime = retries * 1000;
     console.warn(`[@octokit/auth-app] Retrying after 401 response to account for token replication delay (retry: ${retries}, wait: ${awaitTime}ms)`);
     await new Promise(resolve => setTimeout(resolve, awaitTime));
     return sendRequestWithRetries(request, options, createdAt, retries);
   }
 }
 
-const VERSION = "2.4.14";
+const VERSION = "2.4.15";
 
 const createAppAuth = function createAppAuth(options) {
   const state = Object.assign({
