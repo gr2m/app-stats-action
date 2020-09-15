@@ -7,7 +7,7 @@
 ## Usage
 
 ```yml
-Name: App Stats
+name: App Stats
 on:
   push:
     branches:
