@@ -1029,10 +1029,15 @@ var universalGithubAppJwt = __webpack_require__(292);
 var LRU = _interopDefault(__webpack_require__(702));
 var requestError = __webpack_require__(463);
 
-async function getAppAuthentication(id, privateKey) {
+async function getAppAuthentication({
+  id,
+  privateKey,
+  timeDifference
+}) {
   const appAuthentication = await universalGithubAppJwt.githubAppJwt({
     id,
-    privateKey
+    privateKey,
+    now: timeDifference && Math.floor(Date.now() / 1000) + timeDifference
   });
   return {
     type: "app",
@@ -1159,7 +1164,7 @@ async function getInstallationAuthentication(state, options, customRequest) {
     }
   }
 
-  const appAuthentication = await getAppAuthentication(state.id, state.privateKey);
+  const appAuthentication = await getAppAuthentication(state);
   const request = customRequest || state.request;
   const {
     data: {
@@ -1246,7 +1251,7 @@ async function getOAuthAuthentication(state, options, customRequest) {
 
 async function auth(state, options) {
   if (options.type === "app") {
-    return getAppAuthentication(state.id, state.privateKey);
+    return getAppAuthentication(state);
   }
 
   if (options.type === "installation") {
@@ -1254,6 +1259,55 @@ async function auth(state, options) {
   }
 
   return getOAuthAuthentication(state, options);
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
 }
 
 const PATHS = ["/app", "/app/installations", "/app/installations/:installation_id", "/app/installations/:installation_id/access_tokens", "/marketplace_listing/accounts/:account_id", "/marketplace_listing/plan", "/marketplace_listing/plans/:plan_id/accounts", "/marketplace_listing/stubbed/accounts/:account_id", "/marketplace_listing/stubbed/plan", "/marketplace_listing/stubbed/plans/:plan_id/accounts", "/orgs/:org/installation", "/repos/:owner/:repo/installation", "/users/:username/installation"]; // CREDIT: Simon Grondin (https://github.com/SGrondin)
@@ -1290,15 +1344,49 @@ function requiresAppAuth(url) {
 }
 
 const FIVE_SECONDS_IN_MS = 5 * 1000;
+
+function isNotTimeSkewError(error) {
+  return !(error.message.match(/'Expiration time' claim \('exp'\) must be a numeric value representing the future time at which the assertion expires/) || error.message.match(/'Issued at' claim \('iat'\) must be an Integer representing the time that the assertion was issued/));
+}
+
 async function hook(state, request, route, parameters) {
   let endpoint = request.endpoint.merge(route, parameters);
 
   if (requiresAppAuth(endpoint.url.replace(request.endpoint.DEFAULTS.baseUrl, ""))) {
     const {
       token
-    } = await getAppAuthentication(state.id, state.privateKey);
+    } = await getAppAuthentication(state);
     endpoint.headers.authorization = `bearer ${token}`;
-    return request(endpoint);
+    let response;
+
+    try {
+      response = await request(endpoint);
+    } catch (error) {
+      // If there's an issue with the expiration, regenerate the token and try again.
+      // Otherwise rethrow the error for upstream handling.
+      if (isNotTimeSkewError(error)) {
+        throw error;
+      } // If the date header is missing, we can't correct the system time skew.
+      // Throw the error to be handled upstream.
+
+
+      if (typeof error.headers.date === "undefined") {
+        throw error;
+      }
+
+      const diff = Math.floor((Date.parse(error.headers.date) - Date.parse(new Date().toString())) / 1000);
+      console.warn(error.message);
+      console.warn(`[@octokit/auth-app] GitHub API time and system time are different by ${diff} seconds. Retrying request with the difference accounted for.`);
+      const {
+        token
+      } = await getAppAuthentication(_objectSpread2(_objectSpread2({}, state), {}, {
+        timeDifference: diff
+      }));
+      endpoint.headers.authorization = `bearer ${token}`;
+      return request(endpoint);
+    }
+
+    return response;
   }
 
   const {
@@ -1342,7 +1430,7 @@ async function sendRequestWithRetries(request, options, createdAt, retries = 0) 
   }
 }
 
-const VERSION = "2.5.0";
+const VERSION = "2.5.1";
 
 const createAppAuth = function createAppAuth(options) {
   const state = Object.assign({
