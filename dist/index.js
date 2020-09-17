@@ -1128,9 +1128,9 @@ function toTokenAuthentication({
 }
 
 async function getInstallationAuthentication(state, options, customRequest) {
-  const installationId = options.installationId || state.installationId;
+  const installationId = Number(options.installationId || state.installationId);
 
-  if (typeof installationId !== "number") {
+  if (!installationId) {
     throw new Error("[@octokit/auth-app] installationId option is required for installation authentication.");
   }
 
@@ -1430,7 +1430,7 @@ async function sendRequestWithRetries(request, options, createdAt, retries = 0) 
   }
 }
 
-const VERSION = "2.5.1";
+const VERSION = "2.6.0";
 
 const createAppAuth = function createAppAuth(options) {
   const state = Object.assign({
@@ -1440,7 +1440,11 @@ const createAppAuth = function createAppAuth(options) {
       }
     }),
     cache: getCache()
-  }, options);
+  }, options, {
+    id: Number(options.id)
+  }, options.installationId ? {
+    installationId: Number(options.installationId)
+  } : {});
   return Object.assign(auth.bind(null, state), {
     hook: hook.bind(null, state)
   });
