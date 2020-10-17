@@ -1437,8 +1437,8 @@ async function hook(state, request, route, parameters) {
       }
 
       const diff = Math.floor((Date.parse(error.headers.date) - Date.parse(new Date().toString())) / 1000);
-      console.warn(error.message);
-      console.warn(`[@octokit/auth-app] GitHub API time and system time are different by ${diff} seconds. Retrying request with the difference accounted for.`);
+      state.log.warn(error.message);
+      state.log.warn(`[@octokit/auth-app] GitHub API time and system time are different by ${diff} seconds. Retrying request with the difference accounted for.`);
       const {
         token
       } = await getAppAuthentication(_objectSpread2(_objectSpread2({}, state), {}, {
@@ -1456,7 +1456,7 @@ async function hook(state, request, route, parameters) {
     createdAt
   } = await getInstallationAuthentication(state, {}, request);
   endpoint.headers.authorization = `token ${token}`;
-  return sendRequestWithRetries(request, endpoint, createdAt);
+  return sendRequestWithRetries(state, request, endpoint, createdAt);
 }
 /**
  * Newly created tokens might not be accessible immediately after creation.
@@ -1466,7 +1466,7 @@ async function hook(state, request, route, parameters) {
  * @see https://github.com/octokit/auth-app.js/issues/65
  */
 
-async function sendRequestWithRetries(request, options, createdAt, retries = 0) {
+async function sendRequestWithRetries(state, request, options, createdAt, retries = 0) {
   const timeSinceTokenCreationInMs = +new Date() - +new Date(createdAt);
 
   try {
@@ -1486,13 +1486,13 @@ async function sendRequestWithRetries(request, options, createdAt, retries = 0) 
 
     ++retries;
     const awaitTime = retries * 1000;
-    console.warn(`[@octokit/auth-app] Retrying after 401 response to account for token replication delay (retry: ${retries}, wait: ${awaitTime / 1000}s)`);
+    state.log.warn(`[@octokit/auth-app] Retrying after 401 response to account for token replication delay (retry: ${retries}, wait: ${awaitTime / 1000}s)`);
     await new Promise(resolve => setTimeout(resolve, awaitTime));
-    return sendRequestWithRetries(request, options, createdAt, retries);
+    return sendRequestWithRetries(state, request, options, createdAt, retries);
   }
 }
 
-const VERSION = "2.6.0";
+const VERSION = "2.7.0";
 
 const createAppAuth = function createAppAuth(options) {
   const state = Object.assign({
@@ -1506,7 +1506,11 @@ const createAppAuth = function createAppAuth(options) {
     id: Number(options.id)
   }, options.installationId ? {
     installationId: Number(options.installationId)
-  } : {});
+  } : {}, {
+    log: Object.assign({
+      warn: console.warn.bind(console)
+    }, options.log)
+  });
   return Object.assign(auth.bind(null, state), {
     hook: hook.bind(null, state)
   });
