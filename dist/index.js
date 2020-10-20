@@ -8593,7 +8593,7 @@ function _objectSpread2(target) {
   return target;
 }
 
-const VERSION = "3.3.1";
+const VERSION = "3.3.2";
 
 const noop = () => Promise.resolve(); // @ts-ignore
 
