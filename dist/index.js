@@ -5203,7 +5203,7 @@ var request = __webpack_require__(753);
 var graphql = __webpack_require__(898);
 var authToken = __webpack_require__(813);
 
-const VERSION = "3.1.3";
+const VERSION = "3.1.4";
 
 class Octokit {
   constructor(options = {}) {
@@ -5263,7 +5263,8 @@ class Octokit {
       }
     } else {
       const auth = options.authStrategy(Object.assign({
-        request: this.request
+        request: this.request,
+        log: this.log
       }, options.auth)); // @ts-ignore  ¯\_(ツ)_/¯
 
       hook.wrap("request", auth.hook);
