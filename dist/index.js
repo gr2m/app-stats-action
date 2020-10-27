@@ -1097,7 +1097,7 @@ async function getAppAuthentication({
   timeDifference
 }) {
   const appAuthentication = await universalGithubAppJwt.githubAppJwt({
-    id,
+    id: +id,
     privateKey,
     now: timeDifference && Math.floor(Date.now() / 1000) + timeDifference
   });
@@ -1194,6 +1194,21 @@ async function getInstallationAuthentication(state, options, customRequest) {
 
   if (!installationId) {
     throw new Error("[@octokit/auth-app] installationId option is required for installation authentication.");
+  }
+
+  if (options.factory) {
+    // @ts-ignore if `options.factory` is set, the return type for `auth()` should be `Promise<ReturnType<options.factory>>`
+    return options.factory({
+      cache: state.cache,
+      id: state.id,
+      privateKey: state.privateKey,
+      log: state.log,
+      request: state.request,
+      clientId: state.clientId,
+      clientSecret: state.clientSecret,
+      timeDifference: state.timeDifference,
+      installationId
+    });
   }
 
   const optionsWithInstallationTokenFromState = Object.assign({
@@ -1492,7 +1507,7 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "2.7.0";
+const VERSION = "2.8.0";
 
 const createAppAuth = function createAppAuth(options) {
   const state = Object.assign({
