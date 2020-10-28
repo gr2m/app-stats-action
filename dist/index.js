@@ -1087,17 +1087,18 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var universalUserAgent = __webpack_require__(796);
 var request = __webpack_require__(753);
+var deprecation = __webpack_require__(692);
 var universalGithubAppJwt = __webpack_require__(292);
 var LRU = _interopDefault(__webpack_require__(702));
 var requestError = __webpack_require__(463);
 
 async function getAppAuthentication({
-  id,
+  appId,
   privateKey,
   timeDifference
 }) {
   const appAuthentication = await universalGithubAppJwt.githubAppJwt({
-    id: +id,
+    id: +appId,
     privateKey,
     now: timeDifference && Math.floor(Date.now() / 1000) + timeDifference
   });
@@ -1107,6 +1108,91 @@ async function getAppAuthentication({
     appId: appAuthentication.appId,
     expiresAt: new Date(appAuthentication.expiration * 1000).toISOString()
   };
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
+}
+
+function ownKeys(object, enumerableOnly) {
+  var keys = Object.keys(object);
+
+  if (Object.getOwnPropertySymbols) {
+    var symbols = Object.getOwnPropertySymbols(object);
+    if (enumerableOnly) symbols = symbols.filter(function (sym) {
+      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+    });
+    keys.push.apply(keys, symbols);
+  }
+
+  return keys;
+}
+
+function _objectSpread2(target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i] != null ? arguments[i] : {};
+
+    if (i % 2) {
+      ownKeys(Object(source), true).forEach(function (key) {
+        _defineProperty(target, key, source[key]);
+      });
+    } else if (Object.getOwnPropertyDescriptors) {
+      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+    } else {
+      ownKeys(Object(source)).forEach(function (key) {
+        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+      });
+    }
+  }
+
+  return target;
+}
+
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
+}
+
+function _objectWithoutProperties(source, excluded) {
+  if (source == null) return {};
+
+  var target = _objectWithoutPropertiesLoose(source, excluded);
+
+  var key, i;
+
+  if (Object.getOwnPropertySymbols) {
+    var sourceSymbolKeys = Object.getOwnPropertySymbols(source);
+
+    for (i = 0; i < sourceSymbolKeys.length; i++) {
+      key = sourceSymbolKeys[i];
+      if (excluded.indexOf(key) >= 0) continue;
+      if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue;
+      target[key] = source[key];
+    }
+  }
+
+  return target;
 }
 
 // https://github.com/isaacs/node-lru-cache#readme
@@ -1197,18 +1283,14 @@ async function getInstallationAuthentication(state, options, customRequest) {
   }
 
   if (options.factory) {
-    // @ts-ignore if `options.factory` is set, the return type for `auth()` should be `Promise<ReturnType<options.factory>>`
-    return options.factory({
-      cache: state.cache,
-      id: state.id,
-      privateKey: state.privateKey,
-      log: state.log,
-      request: state.request,
-      clientId: state.clientId,
-      clientSecret: state.clientSecret,
-      timeDifference: state.timeDifference,
-      installationId
-    });
+    const {
+      type,
+      factory
+    } = options,
+          factoryAuthOptions = _objectWithoutProperties(options, ["type", "factory"]); // @ts-ignore if `options.factory` is set, the return type for `auth()` should be `Promise<ReturnType<options.factory>>`
+
+
+    return factory(Object.assign({}, state, factoryAuthOptions));
   }
 
   const optionsWithInstallationTokenFromState = Object.assign({
@@ -1338,55 +1420,6 @@ async function auth(state, options) {
   return getOAuthAuthentication(state, options);
 }
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
-function ownKeys(object, enumerableOnly) {
-  var keys = Object.keys(object);
-
-  if (Object.getOwnPropertySymbols) {
-    var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
-    keys.push.apply(keys, symbols);
-  }
-
-  return keys;
-}
-
-function _objectSpread2(target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i] != null ? arguments[i] : {};
-
-    if (i % 2) {
-      ownKeys(Object(source), true).forEach(function (key) {
-        _defineProperty(target, key, source[key]);
-      });
-    } else if (Object.getOwnPropertyDescriptors) {
-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
-    } else {
-      ownKeys(Object(source)).forEach(function (key) {
-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
-      });
-    }
-  }
-
-  return target;
-}
-
 const PATHS = ["/app", "/app/installations", "/app/installations/:installation_id", "/app/installations/:installation_id/access_tokens", "/marketplace_listing/accounts/:account_id", "/marketplace_listing/plan", "/marketplace_listing/plans/:plan_id/accounts", "/marketplace_listing/stubbed/accounts/:account_id", "/marketplace_listing/stubbed/plan", "/marketplace_listing/stubbed/plans/:plan_id/accounts", "/orgs/:org/installation", "/repos/:owner/:repo/installation", "/users/:username/installation"]; // CREDIT: Simon Grondin (https://github.com/SGrondin)
 // https://github.com/octokit/plugin-throttling.js/blob/45c5d7f13b8af448a9dbca468d9c9150a73b3948/lib/route-matcher.js
 
@@ -1507,9 +1540,17 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "2.8.0";
+const VERSION = "2.10.0";
 
 const createAppAuth = function createAppAuth(options) {
+  const log = Object.assign({
+    warn: console.warn.bind(console)
+  }, options.log);
+
+  if ("id" in options) {
+    log.warn(new deprecation.Deprecation('[@octokit/auth-app] "createAppAuth({ id })" is deprecated, use "createAppAuth({ appId })" instead'));
+  }
+
   const state = Object.assign({
     request: request.request.defaults({
       headers: {
@@ -1518,13 +1559,11 @@ const createAppAuth = function createAppAuth(options) {
     }),
     cache: getCache()
   }, options, {
-    id: Number(options.id)
+    appId: Number("appId" in options ? options.appId : options.id)
   }, options.installationId ? {
     installationId: Number(options.installationId)
   } : {}, {
-    log: Object.assign({
-      warn: console.warn.bind(console)
-    }, options.log)
+    log
   });
   return Object.assign(auth.bind(null, state), {
     hook: hook.bind(null, state)
