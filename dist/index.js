@@ -9859,20 +9859,25 @@ async function getAppStats({ id, privateKey }) {
         },
       });
 
-      const repositories = await installationOctokit.paginate(
-        "GET /installation/repositories",
-        {
-          mediaType: { previews: ["machine-man"] },
-          per_page: 100,
-        },
-        (response) =>
-          response.data.map((repository) => {
-            return {
-              private: repository.private,
-              stars: repository.stargazers_count,
-            };
-          })
-      );
+      const repositories = await installationOctokit
+        .paginate(
+          "GET /installation/repositories",
+          {
+            mediaType: { previews: ["machine-man"] },
+            per_page: 100,
+          },
+          (response) =>
+            response.data.map((repository) => {
+              return {
+                private: repository.private,
+                stars: repository.stargazers_count,
+              };
+            })
+        )
+        .catch((error) => {
+          console.error(error);
+          return [];
+        });
 
       const stars = repositories
         .filter((repository) => !repository.private)
