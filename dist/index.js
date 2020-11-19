@@ -1540,7 +1540,7 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "2.10.1";
+const VERSION = "2.10.2";
 
 const createAppAuth = function createAppAuth(options) {
   const log = Object.assign({
