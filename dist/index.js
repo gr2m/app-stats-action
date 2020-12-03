@@ -5295,7 +5295,7 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
-const VERSION = "3.2.1";
+const VERSION = "3.2.2";
 
 class Octokit {
   constructor(options = {}) {
@@ -8647,7 +8647,7 @@ function _objectSpread2(target) {
   return target;
 }
 
-const VERSION = "3.3.3";
+const VERSION = "3.3.4";
 
 const noop = () => Promise.resolve(); // @ts-ignore
 
@@ -8707,7 +8707,7 @@ async function doRequest(state, request, options) {
   return req;
 }
 
-var triggersNotificationPaths = ["/orgs/:org/invitations", "/orgs/:org/teams/:team_slug/discussions", "/orgs/:org/teams/:team_slug/discussions/:discussion_number/comments", "/repos/:owner/:repo/collaborators/:username", "/repos/:owner/:repo/commits/:commit_sha/comments", "/repos/:owner/:repo/issues", "/repos/:owner/:repo/issues/:issue_number/comments", "/repos/:owner/:repo/pulls", "/repos/:owner/:repo/pulls/:pull_number/comments", "/repos/:owner/:repo/pulls/:pull_number/comments/:comment_id/replies", "/repos/:owner/:repo/pulls/:pull_number/merge", "/repos/:owner/:repo/pulls/:pull_number/requested_reviewers", "/repos/:owner/:repo/pulls/:pull_number/reviews", "/repos/:owner/:repo/releases", "/teams/:team_id/discussions", "/teams/:team_id/discussions/:discussion_number/comments"];
+var triggersNotificationPaths = ["/orgs/{org}/invitations", "/orgs/{org}/teams/{team_slug}/discussions", "/orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments", "/repos/{owner}/{repo}/collaborators/{username}", "/repos/{owner}/{repo}/commits/{commit_sha}/comments", "/repos/{owner}/{repo}/issues", "/repos/{owner}/{repo}/issues/{issue_number}/comments", "/repos/{owner}/{repo}/pulls", "/repos/{owner}/{repo}/pulls/{pull_number}/comments", "/repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies", "/repos/{owner}/{repo}/pulls/{pull_number}/merge", "/repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers", "/repos/{owner}/{repo}/pulls/{pull_number}/reviews", "/repos/{owner}/{repo}/releases", "/teams/{team_id}/discussions", "/teams/{team_id}/discussions/{discussion_number}/comments"];
 
 // @ts-ignore
 function routeMatcher(paths) {
@@ -8719,7 +8719,7 @@ function routeMatcher(paths) {
   ] */
   // @ts-ignore
   const regexes = paths.map(path => path.split("/") // @ts-ignore
-  .map(c => c.startsWith(":") ? "(?:.+?)" : c).join("/")); // 'regexes' would contain:
+  .map(c => c.startsWith("{") ? "(?:.+?)" : c).join("/")); // 'regexes' would contain:
 
   /* [
       '/orgs/(?:.+?)/invitations',
@@ -10265,13 +10265,16 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var request = __webpack_require__(753);
 var universalUserAgent = __webpack_require__(796);
 
-const VERSION = "4.5.2";
+const VERSION = "4.5.8";
 
 class GraphqlError extends Error {
   constructor(request, response) {
     const message = response.data.errors[0].message;
     super(message);
     Object.assign(this, response.data);
+    Object.assign(this, {
+      headers: response.headers
+    });
     this.name = "GraphqlError";
     this.request = request; // Maintains proper stack trace (only available on V8)
 
@@ -10285,13 +10288,18 @@ class GraphqlError extends Error {
 }
 
 const NON_VARIABLE_OPTIONS = ["method", "baseUrl", "url", "headers", "request", "query", "mediaType"];
+const GHES_V3_SUFFIX_REGEX = /\/api\/v3\/?$/;
 function graphql(request, query, options) {
-  options = typeof query === "string" ? options = Object.assign({
+  if (typeof query === "string" && options && "query" in options) {
+    return Promise.reject(new Error(`[@octokit/graphql] "query" cannot be used as variable name`));
+  }
+
+  const parsedOptions = typeof query === "string" ? Object.assign({
     query
-  }, options) : options = query;
-  const requestOptions = Object.keys(options).reduce((result, key) => {
+  }, options) : query;
+  const requestOptions = Object.keys(parsedOptions).reduce((result, key) => {
     if (NON_VARIABLE_OPTIONS.includes(key)) {
-      result[key] = options[key];
+      result[key] = parsedOptions[key];
       return result;
     }
 
@@ -10299,12 +10307,27 @@ function graphql(request, query, options) {
       result.variables = {};
     }
 
-    result.variables[key] = options[key];
+    result.variables[key] = parsedOptions[key];
     return result;
-  }, {});
+  }, {}); // workaround for GitHub Enterprise baseUrl set with /api/v3 suffix
+  // https://github.com/octokit/auth-app.js/issues/111#issuecomment-657610451
+
+  const baseUrl = parsedOptions.baseUrl || request.endpoint.DEFAULTS.baseUrl;
+
+  if (GHES_V3_SUFFIX_REGEX.test(baseUrl)) {
+    requestOptions.url = baseUrl.replace(GHES_V3_SUFFIX_REGEX, "/api/graphql");
+  }
+
   return request(requestOptions).then(response => {
     if (response.data.errors) {
+      const headers = {};
+
+      for (const key of Object.keys(response.headers)) {
+        headers[key] = response.headers[key];
+      }
+
       throw new GraphqlError(requestOptions, {
+        headers,
         data: response.data
       });
     }
