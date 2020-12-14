@@ -336,7 +336,7 @@ const getAppStats = __webpack_require__(766);
 main();
 
 async function main() {
-  const id = core.getInput("id", { required: true });
+  const appId = core.getInput("id", { required: true });
   const privateKey = core
     .getInput("private_key", { required: true })
     .replace(/\\n/g, "\n");
@@ -348,7 +348,7 @@ async function main() {
       popularRepositories,
       suspendedInstallations,
     } = await getAppStats({
-      id,
+      appId,
       privateKey,
     });
     core.setOutput("installations", installations);
@@ -9861,11 +9861,11 @@ module.exports = getAppStats;
 
 const Octokit = __webpack_require__(414);
 
-async function getAppStats({ id, privateKey }) {
+async function getAppStats({ appId, privateKey }) {
   try {
     const octokit = new Octokit({
       auth: {
-        id,
+        appId,
         privateKey,
       },
     });
@@ -9899,7 +9899,7 @@ async function getAppStats({ id, privateKey }) {
 
       const installationOctokit = new Octokit({
         auth: {
-          id,
+          appId,
           privateKey,
           installationId: installation.id,
         },
