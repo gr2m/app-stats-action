@@ -5295,7 +5295,7 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
-const VERSION = "3.2.4";
+const VERSION = "3.2.5";
 
 class Octokit {
   constructor(options = {}) {
@@ -9813,7 +9813,7 @@ async function wrapRequest(state, request, options) {
   return limiter.schedule(request, options);
 }
 
-const VERSION = "3.0.6";
+const VERSION = "3.0.7";
 function retry(octokit, octokitOptions = {}) {
   const state = Object.assign({
     enabled: true,
@@ -10311,7 +10311,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var request = __webpack_require__(753);
 var universalUserAgent = __webpack_require__(796);
 
-const VERSION = "4.5.8";
+const VERSION = "4.5.9";
 
 class GraphqlError extends Error {
   constructor(request, response) {
