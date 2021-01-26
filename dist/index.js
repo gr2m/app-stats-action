@@ -1540,7 +1540,7 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "2.10.5";
+const VERSION = "2.10.6";
 
 const createAppAuth = function createAppAuth(options) {
   const log = Object.assign({
@@ -3238,7 +3238,7 @@ module.exports = isString;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const VERSION = "2.8.0";
+const VERSION = "2.8.4";
 
 /**
  * Some “list” response that can be paginated have a different response structure
@@ -8647,7 +8647,7 @@ function _objectSpread2(target) {
   return target;
 }
 
-const VERSION = "3.4.0";
+const VERSION = "3.4.1";
 
 const noop = () => Promise.resolve(); // @ts-ignore
 
