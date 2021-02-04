@@ -1409,15 +1409,23 @@ async function getOAuthAuthentication(state, options, customRequest) {
 }
 
 async function auth(state, options) {
-  if (options.type === "app") {
-    return getAppAuthentication(state);
-  }
+  const {
+    type
+  } = options;
 
-  if (options.type === "installation") {
-    return getInstallationAuthentication(state, options);
-  }
+  switch (type) {
+    case "app":
+      return getAppAuthentication(state);
 
-  return getOAuthAuthentication(state, options);
+    case "installation":
+      return getInstallationAuthentication(state, options);
+
+    case "oauth":
+      return getOAuthAuthentication(state, options);
+
+    default:
+      throw new Error(`Invalid auth type: ${type}`);
+  }
 }
 
 const PATHS = ["/app", "/app/hook/config", "/app/installations", "/app/installations/{installation_id}", "/app/installations/{installation_id}/access_tokens", "/app/installations/{installation_id}/suspended", "/marketplace_listing/accounts/{account_id}", "/marketplace_listing/plan", "/marketplace_listing/plans", "/marketplace_listing/plans/{plan_id}/accounts", "/marketplace_listing/stubbed/accounts/{account_id}", "/marketplace_listing/stubbed/plan", "/marketplace_listing/stubbed/plans", "/marketplace_listing/stubbed/plans/{plan_id}/accounts", "/orgs/{org}/installation", "/repos/{owner}/{repo}/installation", "/users/{username}/installation"]; // CREDIT: Simon Grondin (https://github.com/SGrondin)
@@ -1540,7 +1548,7 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "2.10.6";
+const VERSION = "2.11.0";
 
 const createAppAuth = function createAppAuth(options) {
   const log = Object.assign({
