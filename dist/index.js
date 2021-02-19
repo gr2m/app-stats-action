@@ -3246,7 +3246,7 @@ module.exports = isString;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const VERSION = "2.9.1";
+const VERSION = "2.10.0";
 
 /**
  * Some “list” response that can be paginated have a different response structure
