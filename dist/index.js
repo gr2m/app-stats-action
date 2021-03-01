@@ -1087,7 +1087,6 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var universalUserAgent = __webpack_require__(796);
 var request = __webpack_require__(753);
-var deprecation = __webpack_require__(692);
 var universalGithubAppJwt = __webpack_require__(292);
 var LRU = _interopDefault(__webpack_require__(702));
 var requestError = __webpack_require__(463);
@@ -1396,15 +1395,13 @@ async function getOAuthAuthentication(state, options, customRequest) {
 
   const {
     data: {
-      access_token: token,
-      scope
+      access_token: token
     }
   } = response;
   return {
     type: "token",
     tokenType: "oauth",
-    token,
-    scopes: scope.split(/,\s*/).filter(Boolean)
+    token
   };
 }
 
@@ -1548,17 +1545,12 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "2.11.0";
+const VERSION = "3.0.0";
 
 const createAppAuth = function createAppAuth(options) {
   const log = Object.assign({
     warn: console.warn.bind(console)
   }, options.log);
-
-  if ("id" in options) {
-    log.warn(new deprecation.Deprecation('[@octokit/auth-app] "createAppAuth({ id })" is deprecated, use "createAppAuth({ appId })" instead'));
-  }
-
   const state = Object.assign({
     request: request.request.defaults({
       headers: {
@@ -1566,9 +1558,7 @@ const createAppAuth = function createAppAuth(options) {
       }
     }),
     cache: getCache()
-  }, options, {
-    appId: Number("appId" in options ? options.appId : options.id)
-  }, options.installationId ? {
+  }, options, options.installationId ? {
     installationId: Number(options.installationId)
   } : {}, {
     log
@@ -3246,7 +3236,7 @@ module.exports = isString;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const VERSION = "2.10.0";
+const VERSION = "2.11.0";
 
 /**
  * Some “list” response that can be paginated have a different response structure
