@@ -10,7 +10,7 @@
   "keywords": [
     "action"
   ],
-  "repository": "https://github.com/gr2m/app-stats-action",
+  "repository": "github:gr2m/app-stats-action",
   "author": "Gregor Martynus (https://twitter.com/gr2m)",
   "license": "MIT",
   "dependencies": {
