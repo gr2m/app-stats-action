@@ -1941,7 +1941,7 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "3.2.0";
+const VERSION = "3.3.0";
 
 const createAppAuth = function createAppAuth(options) {
   const log = Object.assign({
@@ -5776,7 +5776,7 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
-const VERSION = "3.3.1";
+const VERSION = "3.3.2";
 
 class Octokit {
   constructor(options = {}) {
