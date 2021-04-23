@@ -398,7 +398,7 @@ var isPlainObject = __webpack_require__(880);
 var nodeFetch = _interopDefault(__webpack_require__(454));
 var requestError = __webpack_require__(463);
 
-const VERSION = "5.4.14";
+const VERSION = "5.4.15";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -418,7 +418,9 @@ function fetchWrapper(requestOptions) {
     body: requestOptions.body,
     headers: requestOptions.headers,
     redirect: requestOptions.redirect
-  }, requestOptions.request)).then(response => {
+  }, // `requestOptions.request.agent` type is incompatible
+  // see https://github.com/octokit/types.ts/pull/264
+  requestOptions.request)).then(response => {
     url = response.url;
     status = response.status;
 
@@ -1297,9 +1299,9 @@ var endpoint = __webpack_require__(385);
 var universalUserAgent = __webpack_require__(796);
 var isPlainObject = __webpack_require__(27);
 var nodeFetch = _interopDefault(__webpack_require__(454));
-var requestError = __webpack_require__(403);
+var requestError = __webpack_require__(463);
 
-const VERSION = "5.4.14";
+const VERSION = "5.4.15";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -1319,7 +1321,9 @@ function fetchWrapper(requestOptions) {
     body: requestOptions.body,
     headers: requestOptions.headers,
     redirect: requestOptions.redirect
-  }, requestOptions.request)).then(response => {
+  }, // `requestOptions.request.agent` type is incompatible
+  // see https://github.com/octokit/types.ts/pull/264
+  requestOptions.request)).then(response => {
     url = response.url;
     status = response.status;
 
@@ -1941,9 +1945,21 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "3.3.0";
+const VERSION = "3.4.0";
 
 const createAppAuth = function createAppAuth(options) {
+  if (!options.appId) {
+    throw new Error("[@octokit/auth-app] appId option is required");
+  }
+
+  if (!options.privateKey) {
+    throw new Error("[@octokit/auth-app] privateKey option is required");
+  }
+
+  if ("installationId" in options && !options.installationId) {
+    throw new Error("[@octokit/auth-app] installationId is set to a falsy value");
+  }
+
   const log = Object.assign({
     warn: console.warn.bind(console)
   }, options.log);
@@ -4750,69 +4766,6 @@ module.exports = function (Yallist) {
     }
   }
 }
-
-
-/***/ }),
-
-/***/ 403:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var deprecation = __webpack_require__(692);
-var once = _interopDefault(__webpack_require__(49));
-
-const logOnce = once(deprecation => console.warn(deprecation));
-/**
- * Error with extra properties to help with debugging
- */
-
-class RequestError extends Error {
-  constructor(message, statusCode, options) {
-    super(message); // Maintains proper stack trace (only available on V8)
-
-    /* istanbul ignore next */
-
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
-    }
-
-    this.name = "HttpError";
-    this.status = statusCode;
-    Object.defineProperty(this, "code", {
-      get() {
-        logOnce(new deprecation.Deprecation("[@octokit/request-error] `error.code` is deprecated, use `error.status`."));
-        return statusCode;
-      }
-
-    });
-    this.headers = options.headers || {}; // redact request credentials without mutating original request options
-
-    const requestCopy = Object.assign({}, options.request);
-
-    if (options.request.headers.authorization) {
-      requestCopy.headers = Object.assign({}, options.request.headers, {
-        authorization: options.request.headers.authorization.replace(/ .*$/, " [REDACTED]")
-      });
-    }
-
-    requestCopy.url = requestCopy.url // client_id & client_secret can be passed as URL query parameters to increase rate limit
-    // see https://developer.github.com/v3/#increasing-the-unauthenticated-rate-limit-for-oauth-applications
-    .replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]") // OAuth tokens can be passed as URL query parameters, although it is not recommended
-    // see https://developer.github.com/v3/#oauth2-token-sent-in-a-header
-    .replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
-    this.request = requestCopy;
-  }
-
-}
-
-exports.RequestError = RequestError;
-//# sourceMappingURL=index.js.map
 
 
 /***/ }),
@@ -10503,7 +10456,7 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
-const VERSION = "1.2.3";
+const VERSION = "1.2.4";
 
 async function getAuthentication(state) {
   // handle code exchange form OAuth Web Flow
@@ -12209,7 +12162,7 @@ async function hook(state, request, route, parameters) {
   return await request(endpoint);
 }
 
-const VERSION = "4.1.1";
+const VERSION = "4.1.2";
 
 function createOAuthAppAuth(options) {
   const state = Object.assign({
@@ -12255,7 +12208,7 @@ var isPlainObject = __webpack_require__(88);
 var nodeFetch = _interopDefault(__webpack_require__(454));
 var requestError = __webpack_require__(519);
 
-const VERSION = "5.4.14";
+const VERSION = "5.4.15";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -12275,7 +12228,9 @@ function fetchWrapper(requestOptions) {
     body: requestOptions.body,
     headers: requestOptions.headers,
     redirect: requestOptions.redirect
-  }, requestOptions.request)).then(response => {
+  }, // `requestOptions.request.agent` type is incompatible
+  // see https://github.com/octokit/types.ts/pull/264
+  requestOptions.request)).then(response => {
     url = response.url;
     status = response.status;
 
