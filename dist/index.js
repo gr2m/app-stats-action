@@ -1515,29 +1515,18 @@ var universalGithubAppJwt = __webpack_require__(292);
 var LRU = _interopDefault(__webpack_require__(702));
 var authOauthUser = __webpack_require__(722);
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
 
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
     keys.push.apply(keys, symbols);
   }
 
@@ -1562,6 +1551,21 @@ function _objectSpread2(target) {
   }
 
   return target;
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
 }
 
 function _objectWithoutPropertiesLoose(source, excluded) {
@@ -1651,6 +1655,7 @@ async function get(cache, options) {
     expiresAt,
     permissions,
     repositoryIds: options.repositoryIds,
+    repositoryNames: options.repositoryNames,
     singleFileName,
     repositorySelection: repositorySelection
   };
@@ -1665,11 +1670,13 @@ async function set(cache, options, data) {
 function optionsToCacheKey({
   installationId,
   permissions = {},
-  repositoryIds = []
+  repositoryIds = [],
+  repositoryNames = []
 }) {
   const permissionsString = Object.keys(permissions).sort().map(name => permissions[name] === "read" ? name : `${name}!`).join(",");
   const repositoryIdsString = repositoryIds.sort().join(",");
-  return [installationId, repositoryIdsString, permissionsString].filter(Boolean).join("|");
+  const repositoryNamesString = repositoryNames.join(",");
+  return [installationId, repositoryIdsString, repositoryNamesString, permissionsString].filter(Boolean).join("|");
 }
 
 function toTokenAuthentication({
@@ -1680,6 +1687,7 @@ function toTokenAuthentication({
   repositorySelection,
   permissions,
   repositoryIds,
+  repositoryNames,
   singleFileName
 }) {
   return Object.assign({
@@ -1693,11 +1701,14 @@ function toTokenAuthentication({
     repositorySelection
   }, repositoryIds ? {
     repositoryIds
+  } : null, repositoryNames ? {
+    repositoryNames
   } : null, singleFileName ? {
     singleFileName
   } : null);
 }
 
+const _excluded = ["type", "factory", "oauthApp"];
 async function getInstallationAuthentication(state, options, customRequest) {
   const installationId = Number(options.installationId || state.installationId);
 
@@ -1712,7 +1723,7 @@ async function getInstallationAuthentication(state, options, customRequest) {
       factory,
       oauthApp
     } = _state$options,
-          factoryAuthOptions = _objectWithoutProperties(_state$options, ["type", "factory", "oauthApp"]); // @ts-expect-error if `options.factory` is set, the return type for `auth()` should be `Promise<ReturnType<options.factory>>`
+          factoryAuthOptions = _objectWithoutProperties(_state$options, _excluded); // @ts-expect-error if `options.factory` is set, the return type for `auth()` should be `Promise<ReturnType<options.factory>>`
 
 
     return factory(factoryAuthOptions);
@@ -1732,6 +1743,7 @@ async function getInstallationAuthentication(state, options, customRequest) {
         expiresAt,
         permissions,
         repositoryIds,
+        repositoryNames,
         singleFileName,
         repositorySelection
       } = result;
@@ -1743,6 +1755,7 @@ async function getInstallationAuthentication(state, options, customRequest) {
         permissions,
         repositorySelection,
         repositoryIds,
+        repositoryNames,
         singleFileName
       });
     }
@@ -1764,6 +1777,7 @@ async function getInstallationAuthentication(state, options, customRequest) {
   } = await request("POST /app/installations/{installation_id}/access_tokens", {
     installation_id: installationId,
     repository_ids: options.repositoryIds,
+    repositories: options.repositoryNames,
     permissions: options.permissions,
     mediaType: {
       previews: ["machine-man"]
@@ -1773,6 +1787,7 @@ async function getInstallationAuthentication(state, options, customRequest) {
     }
   });
   const repositoryIds = repositories ? repositories.map(r => r.id) : void 0;
+  const repositoryNames = repositories ? repositories.map(repo => repo.name) : void 0;
   const createdAt = new Date().toISOString();
   await set(state.cache, optionsWithInstallationTokenFromState, {
     token,
@@ -1781,6 +1796,7 @@ async function getInstallationAuthentication(state, options, customRequest) {
     repositorySelection,
     permissions,
     repositoryIds,
+    repositoryNames,
     singleFileName
   });
   return toTokenAuthentication({
@@ -1791,19 +1807,20 @@ async function getInstallationAuthentication(state, options, customRequest) {
     repositorySelection,
     permissions,
     repositoryIds,
+    repositoryNames,
     singleFileName
   });
 }
 
-async function auth(state, options) {
-  const {
-    type
-  } = options,
-        authOptions = _objectWithoutProperties(options, ["type"]);
-
-  switch (type) {
+async function auth(state, authOptions) {
+  switch (authOptions.type) {
     case "app":
       return getAppAuthentication(state);
+    // @ts-expect-error "oauth" is not supperted in types
+
+    case "oauth":
+      state.log.warn( // @ts-expect-error `log.warn()` expects string
+      new deprecation.Deprecation(`[@octokit/auth-app] {type: "oauth"} is deprecated. Use {type: "oauth-app"} instead`));
 
     case "oauth-app":
       return state.oauthApp({
@@ -1814,18 +1831,14 @@ async function auth(state, options) {
       return getInstallationAuthentication(state, _objectSpread2(_objectSpread2({}, authOptions), {}, {
         type: "installation"
       }));
-    // @ts-expect-error
-
-    case "oauth":
-      state.log.warn( // @ts-expect-error
-      new deprecation.Deprecation(`[@octokit/auth-app] {type: "oauth"} is deprecated. Use {type: "oauth-app"} instead`));
 
     case "oauth-user":
-      // @ts-expect-error TODO: infer correct auth options type based on type. authOptions should be typed as "WebFlowAuthOptions | GitHubAppDeviceFlowAuthOptions"
+      // @ts-expect-error TODO: infer correct auth options type based on type. authOptions should be typed as "WebFlowAuthOptions | OAuthAppDeviceFlowAuthOptions | GitHubAppDeviceFlowAuthOptions"
       return state.oauthApp(authOptions);
 
     default:
-      throw new Error(`Invalid auth type: ${type}`);
+      // @ts-expect-error type is "never" at this point
+      throw new Error(`Invalid auth type: ${authOptions.type}`);
   }
 }
 
@@ -1959,9 +1972,9 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "3.4.0";
+const VERSION = "3.4.1";
 
-const createAppAuth = function createAppAuth(options) {
+function createAppAuth(options) {
   if (!options.appId) {
     throw new Error("[@octokit/auth-app] appId option is required");
   }
@@ -1995,11 +2008,12 @@ const createAppAuth = function createAppAuth(options) {
       clientSecret: options.clientSecret || "",
       request: request$1
     })
-  });
+  }); // @ts-expect-error not worth the extra code to appease TS
+
   return Object.assign(auth.bind(null, state), {
     hook: hook.bind(null, state)
   });
-};
+}
 
 Object.defineProperty(exports, 'createOAuthUserAuth', {
   enumerable: true,
@@ -8644,29 +8658,18 @@ var universalUserAgent = __webpack_require__(796);
 var request = __webpack_require__(89);
 var oauthMethods = __webpack_require__(773);
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
 
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
     keys.push.apply(keys, symbols);
   }
 
@@ -8691,6 +8694,21 @@ function _objectSpread2(target) {
   }
 
   return target;
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
 }
 
 function _objectWithoutPropertiesLoose(source, excluded) {
@@ -8834,7 +8852,7 @@ async function hook(state, request, route, parameters) {
   return request(endpoint);
 }
 
-const VERSION = "3.1.1";
+const VERSION = "3.1.2";
 
 function createOAuthDeviceAuth(options) {
   const requestWithDefaults = options.request || request.request.defaults({
@@ -11120,31 +11138,20 @@ var request = __webpack_require__(927);
 var requestError = __webpack_require__(519);
 var btoa = _interopDefault(__webpack_require__(675));
 
-const VERSION = "1.2.2";
-
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
+const VERSION = "1.2.3";
 
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
 
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
     keys.push.apply(keys, symbols);
   }
 
@@ -11169,6 +11176,21 @@ function _objectSpread2(target) {
   }
 
   return target;
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
 }
 
 function _objectWithoutPropertiesLoose(source, excluded) {
@@ -11222,7 +11244,7 @@ async function oauthRequest(request, route, parameters) {
   const response = await request(route, withOAuthParameters);
 
   if ("error" in response.data) {
-    const error = new requestError.RequestError(`${response.data.error_description} (${response.data.error}, ${response.data.error_url})`, 400, {
+    const error = new requestError.RequestError(`${response.data.error_description} (${response.data.error}, ${response.data.error_uri})`, 400, {
       request: request.endpoint.merge(route, withOAuthParameters),
       headers: response.headers
     }); // @ts-ignore add custom response property until https://github.com/octokit/request-error.js/issues/169 is resolved
@@ -12092,29 +12114,18 @@ var request = __webpack_require__(753);
 var btoa = _interopDefault(__webpack_require__(675));
 var authOauthUser = __webpack_require__(722);
 
-function _defineProperty(obj, key, value) {
-  if (key in obj) {
-    Object.defineProperty(obj, key, {
-      value: value,
-      enumerable: true,
-      configurable: true,
-      writable: true
-    });
-  } else {
-    obj[key] = value;
-  }
-
-  return obj;
-}
-
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
 
   if (Object.getOwnPropertySymbols) {
     var symbols = Object.getOwnPropertySymbols(object);
-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
-      return Object.getOwnPropertyDescriptor(object, sym).enumerable;
-    });
+
+    if (enumerableOnly) {
+      symbols = symbols.filter(function (sym) {
+        return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+      });
+    }
+
     keys.push.apply(keys, symbols);
   }
 
@@ -12139,6 +12150,21 @@ function _objectSpread2(target) {
   }
 
   return target;
+}
+
+function _defineProperty(obj, key, value) {
+  if (key in obj) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+
+  return obj;
 }
 
 function _objectWithoutPropertiesLoose(source, excluded) {
@@ -12177,6 +12203,7 @@ function _objectWithoutProperties(source, excluded) {
   return target;
 }
 
+const _excluded = ["type"];
 async function auth(state, authOptions) {
   if (authOptions.type === "oauth-app") {
     return {
@@ -12192,7 +12219,7 @@ async function auth(state, authOptions) {
 
   if ("factory" in authOptions) {
     const _authOptions$state = _objectSpread2(_objectSpread2({}, authOptions), state),
-          options = _objectWithoutProperties(_authOptions$state, ["type"]); // @ts-expect-error TODO: `option` cannot be never, is this a bug?
+          options = _objectWithoutProperties(_authOptions$state, _excluded); // @ts-expect-error TODO: `option` cannot be never, is this a bug?
 
 
     return authOptions.factory(options);
@@ -12220,16 +12247,24 @@ async function hook(state, request, route, parameters) {
     return request(endpoint);
   }
 
-  if (!authOauthUser.requiresBasicAuth(endpoint.url)) {
-    throw new Error(`[@octokit/auth-oauth-app] "${endpoint.method} ${endpoint.url}" does not support clientId/clientSecret basic authentication. Use @octokit/auth-oauth-user instead.`);
+  if (state.clientType === "github-app" && !authOauthUser.requiresBasicAuth(endpoint.url)) {
+    throw new Error(`[@octokit/auth-oauth-app] GitHub Apps cannot use their client ID/secret for basic authentication for endpoints other than "/applications/{client_id}/**". "${endpoint.method} ${endpoint.url}" is not supported.`);
   }
 
   const credentials = btoa(`${state.clientId}:${state.clientSecret}`);
   endpoint.headers.authorization = `basic ${credentials}`;
-  return await request(endpoint);
+
+  try {
+    return await request(endpoint);
+  } catch (error) {
+    /* istanbul ignore if */
+    if (error.status !== 401) throw error;
+    error.message = `[@octokit/auth-oauth-app] "${endpoint.method} ${endpoint.url}" does not support clientId/clientSecret basic authentication.`;
+    throw error;
+  }
 }
 
-const VERSION = "4.1.2";
+const VERSION = "4.3.0";
 
 function createOAuthAppAuth(options) {
   const state = Object.assign({
@@ -12242,7 +12277,6 @@ function createOAuthAppAuth(options) {
   }, options); // @ts-expect-error not worth the extra code to appease TS
 
   return Object.assign(auth.bind(null, state), {
-    // @ts-expect-error not worth the extra code to appease TS
     hook: hook.bind(null, state)
   });
 }
