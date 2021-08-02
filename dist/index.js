@@ -1365,17 +1365,25 @@ async function getAppAuthentication({
   privateKey,
   timeDifference
 }) {
-  const appAuthentication = await universalGithubAppJwt.githubAppJwt({
-    id: +appId,
-    privateKey,
-    now: timeDifference && Math.floor(Date.now() / 1000) + timeDifference
-  });
-  return {
-    type: "app",
-    token: appAuthentication.token,
-    appId: appAuthentication.appId,
-    expiresAt: new Date(appAuthentication.expiration * 1000).toISOString()
-  };
+  try {
+    const appAuthentication = await universalGithubAppJwt.githubAppJwt({
+      id: +appId,
+      privateKey,
+      now: timeDifference && Math.floor(Date.now() / 1000) + timeDifference
+    });
+    return {
+      type: "app",
+      token: appAuthentication.token,
+      appId: appAuthentication.appId,
+      expiresAt: new Date(appAuthentication.expiration * 1000).toISOString()
+    };
+  } catch (error) {
+    if (privateKey === "-----BEGIN RSA PRIVATE KEY-----") {
+      throw new Error("The 'privateKey` option contains only the first line '-----BEGIN RSA PRIVATE KEY-----'. If you are setting it using a `.env` file, make sure it is set on a single line with newlines replaced by '\n'");
+    } else {
+      throw error;
+    }
+  }
 }
 
 // https://github.com/isaacs/node-lru-cache#readme
@@ -1524,10 +1532,8 @@ async function getInstallationAuthentication(state, options, customRequest) {
       token,
       expires_at: expiresAt,
       repositories,
-      permissions,
-      // @ts-ignore
-      repository_selection: repositorySelection,
-      // @ts-ignore
+      permissions: permissionsOptional,
+      repository_selection: repositorySelectionOptional,
       single_file: singleFileName
     }
   } = await request("POST /app/installations/{installation_id}/access_tokens", {
@@ -1542,6 +1548,12 @@ async function getInstallationAuthentication(state, options, customRequest) {
       authorization: `bearer ${appAuthentication.token}`
     }
   });
+  /* istanbul ignore next - permissions are optional per OpenAPI spec, but we think that is incorrect */
+
+  const permissions = permissionsOptional || {};
+  /* istanbul ignore next - repositorySelection are optional per OpenAPI spec, but we think that is incorrect */
+
+  const repositorySelection = repositorySelectionOptional || "all";
   const repositoryIds = repositories ? repositories.map(r => r.id) : void 0;
   const repositoryNames = repositories ? repositories.map(repo => repo.name) : void 0;
   const createdAt = new Date().toISOString();
@@ -1732,7 +1744,7 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "3.5.3";
+const VERSION = "3.6.0";
 
 function createAppAuth(options) {
   if (!options.appId) {
