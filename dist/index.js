@@ -3480,7 +3480,7 @@ module.exports = isString;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const VERSION = "2.16.0";
+const VERSION = "2.16.1";
 
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
@@ -9512,7 +9512,7 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
-const VERSION = "3.5.1";
+const VERSION = "3.5.2";
 
 const noop = () => Promise.resolve(); // @ts-ignore
 
@@ -9710,7 +9710,7 @@ function throttling(octokit, octokitOptions = {}) {
       wantRetry,
       retryAfter
     } = await async function () {
-      if (/\babuse\b/i.test(error.message)) {
+      if (/\bsecondary rate\b/i.test(error.message)) {
         // The user has hit the abuse rate limit. (REST and GraphQL)
         // https://docs.github.com/en/rest/overview/resources-in-the-rest-api#abuse-rate-limits
         // The Retry-After header can sometimes be blank when hitting an abuse limit,
