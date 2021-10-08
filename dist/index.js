@@ -3826,7 +3826,7 @@ module.exports = isString;
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const VERSION = "2.16.7";
+const VERSION = "2.16.8";
 
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
