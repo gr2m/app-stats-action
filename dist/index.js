@@ -2109,7 +2109,7 @@ async function sendRequestWithRetries(state, request, options, createdAt, retrie
   }
 }
 
-const VERSION = "3.6.0";
+const VERSION = "3.6.1";
 
 function createAppAuth(options) {
   if (!options.appId) {
@@ -12031,7 +12031,7 @@ var isPlainObject = __webpack_require__(701);
 var nodeFetch = _interopDefault(__webpack_require__(454));
 var requestError = __webpack_require__(463);
 
-const VERSION = "5.6.0";
+const VERSION = "5.6.2";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -12406,7 +12406,7 @@ var request = __webpack_require__(753);
 var requestError = __webpack_require__(463);
 var btoa = _interopDefault(__webpack_require__(675));
 
-const VERSION = "1.2.4";
+const VERSION = "1.2.6";
 
 function ownKeys(object, enumerableOnly) {
   var keys = Object.keys(object);
@@ -12546,8 +12546,7 @@ async function exchangeWebFlowCode(options) {
     client_id: options.clientId,
     client_secret: options.clientSecret,
     code: options.code,
-    redirect_uri: options.redirectUrl,
-    state: options.state
+    redirect_uri: options.redirectUrl
   });
   const authentication = {
     clientType: options.clientType,
@@ -12646,6 +12645,7 @@ async function checkToken(options) {
     token: options.token,
     scopes: response.data.scopes
   };
+  if (response.data.expires_at) authentication.expiresAt = response.data.expires_at;
 
   if (options.clientType === "github-app") {
     delete authentication.scopes;
@@ -12705,12 +12705,14 @@ async function scopeToken(options) {
     client_id: clientId,
     access_token: token
   }, requestOptions));
-  const authentication = {
+  const authentication = Object.assign({
     clientType,
     clientId,
     clientSecret,
     token: response.data.token
-  };
+  }, response.data.expires_at ? {
+    expiresAt: response.data.expires_at
+  } : {});
   return _objectSpread2(_objectSpread2({}, response), {}, {
     authentication
   });
@@ -12735,6 +12737,7 @@ async function resetToken(options) {
     token: response.data.token,
     scopes: response.data.scopes
   };
+  if (response.data.expires_at) authentication.expiresAt = response.data.expires_at;
 
   if (options.clientType === "github-app") {
     delete authentication.scopes;
@@ -13204,7 +13207,7 @@ function urlBuilderAuthorize(base, options) {
   .map(key => [map[key], `${options[key]}`]) // Finally, build the URL
   .forEach(([key, value], index) => {
     url += index === 0 ? `?` : "&";
-    url += `${key}=${value}`;
+    url += `${key}=${encodeURIComponent(value)}`;
   });
   return url;
 }
