@@ -10772,14 +10772,14 @@ function _defineProperty(obj, key, value) {
   return obj;
 }
 
-const VERSION = "3.6.1";
+const VERSION = "3.6.2";
 
-const noop = () => Promise.resolve(); // @ts-ignore
+const noop = () => Promise.resolve(); // @ts-expect-error
 
 
 function wrapRequest(state, request, options) {
   return state.retryLimiter.schedule(doRequest, state, request, options);
-} // @ts-ignore
+} // @ts-expect-error
 
 async function doRequest(state, request, options) {
   const isWrite = options.method !== "GET" && options.method !== "HEAD";
@@ -10797,7 +10797,7 @@ async function doRequest(state, request, options) {
   if (state.clustering) {
     // Remove a job from Redis if it has not completed or failed within 60s
     // Examples: Node process terminated, client disconnected, etc.
-    // @ts-ignore
+    // @ts-expect-error
     jobOptions.expiration = 1000 * 60;
   } // Guarantee at least 1000ms between writes
   // GraphQL can also trigger writes
@@ -10822,7 +10822,7 @@ async function doRequest(state, request, options) {
   if (isGraphQL) {
     const res = await req;
 
-    if (res.data.errors != null && // @ts-ignore
+    if (res.data.errors != null && // @ts-expect-error
     res.data.errors.some(error => error.type === "RATE_LIMITED")) {
       const error = Object.assign(new Error("GraphQL Rate Limit Exceeded"), {
         response: res,
@@ -10837,7 +10837,6 @@ async function doRequest(state, request, options) {
 
 var triggersNotificationPaths = ["/orgs/{org}/invitations", "/orgs/{org}/invitations/{invitation_id}", "/orgs/{org}/teams/{team_slug}/discussions", "/orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments", "/repos/{owner}/{repo}/collaborators/{username}", "/repos/{owner}/{repo}/commits/{commit_sha}/comments", "/repos/{owner}/{repo}/issues", "/repos/{owner}/{repo}/issues/{issue_number}/comments", "/repos/{owner}/{repo}/pulls", "/repos/{owner}/{repo}/pulls/{pull_number}/comments", "/repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies", "/repos/{owner}/{repo}/pulls/{pull_number}/merge", "/repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers", "/repos/{owner}/{repo}/pulls/{pull_number}/reviews", "/repos/{owner}/{repo}/releases", "/teams/{team_id}/discussions", "/teams/{team_id}/discussions/{discussion_number}/comments"];
 
-// @ts-ignore
 function routeMatcher(paths) {
   // EXAMPLE. For the following paths:
 
@@ -10845,15 +10844,12 @@ function routeMatcher(paths) {
       "/orgs/{org}/invitations",
       "/repos/{owner}/{repo}/collaborators/{username}"
   ] */
-  // @ts-ignore
-  const regexes = paths.map(path => path.split("/") // @ts-ignore
-  .map(c => c.startsWith("{") ? "(?:.+?)" : c).join("/")); // 'regexes' would contain:
+  const regexes = paths.map(path => path.split("/").map(c => c.startsWith("{") ? "(?:.+?)" : c).join("/")); // 'regexes' would contain:
 
   /* [
       '/orgs/(?:.+?)/invitations',
       '/repos/(?:.+?)/(?:.+?)/collaborators/(?:.+?)'
   ] */
-  // @ts-ignore
 
   const regex = `^(?:${regexes.map(r => `(?:${r})`).join("|")})[^/]*$`; // 'regex' would contain:
 
@@ -10868,27 +10864,23 @@ function routeMatcher(paths) {
 
 const regex = routeMatcher(triggersNotificationPaths);
 const triggersNotification = regex.test.bind(regex);
-const groups = {}; // @ts-ignore
+const groups = {}; // @ts-expect-error
 
 const createGroups = function (Bottleneck, common) {
-  // @ts-ignore
   groups.global = new Bottleneck.Group(_objectSpread2({
     id: "octokit-global",
     maxConcurrent: 10
-  }, common)); // @ts-ignore
-
+  }, common));
   groups.search = new Bottleneck.Group(_objectSpread2({
     id: "octokit-search",
     maxConcurrent: 1,
     minTime: 2000
-  }, common)); // @ts-ignore
-
+  }, common));
   groups.write = new Bottleneck.Group(_objectSpread2({
     id: "octokit-write",
     maxConcurrent: 1,
     minTime: 1000
-  }, common)); // @ts-ignore
-
+  }, common));
   groups.notifications = new Bottleneck.Group(_objectSpread2({
     id: "octokit-notifications",
     maxConcurrent: 1,
@@ -10896,15 +10888,14 @@ const createGroups = function (Bottleneck, common) {
   }, common));
 };
 
-function throttling(octokit, octokitOptions = {}) {
+function throttling(octokit, octokitOptions) {
   const {
     enabled = true,
     Bottleneck = BottleneckLight,
     id = "no-id",
     timeout = 1000 * 60 * 2,
     // Redis TTL: 2 minutes
-    connection // @ts-ignore
-
+    connection
   } = octokitOptions.throttle || {};
 
   if (!enabled) {
@@ -10914,7 +10905,7 @@ function throttling(octokit, octokitOptions = {}) {
   const common = {
     connection,
     timeout
-  }; // @ts-ignore
+  };
 
   if (groups.global == null) {
     createGroups(Bottleneck, common);
@@ -10927,10 +10918,10 @@ function throttling(octokit, octokitOptions = {}) {
     retryAfterBaseValue: 1000,
     retryLimiter: new Bottleneck(),
     id
-  }, groups), // @ts-ignore
-  octokitOptions.throttle);
+  }, groups), octokitOptions.throttle);
+  const isUsingDeprecatedOnAbuseLimitHandler = typeof state.onAbuseLimit === "function" && state.onAbuseLimit;
 
-  if (typeof state.onSecondaryRateLimit !== "function" && typeof state.onAbuseLimit !== "function" || typeof state.onRateLimit !== "function") {
+  if (typeof (isUsingDeprecatedOnAbuseLimitHandler ? state.onAbuseLimit : state.onSecondaryRateLimit) !== "function" || typeof state.onRateLimit !== "function") {
     throw new Error(`octokit/plugin-throttling error:
         You must pass the onSecondaryRateLimit and onRateLimit error handlers.
         See https://github.com/octokit/rest.js#throttling
@@ -10945,16 +10936,16 @@ function throttling(octokit, octokitOptions = {}) {
   }
 
   const events = {};
-  const emitter = new Bottleneck.Events(events); // @ts-ignore
+  const emitter = new Bottleneck.Events(events); // @ts-expect-error
 
-  events.on("secondary-limit", state.onSecondaryRateLimit || function (...args) {
+  events.on("secondary-limit", isUsingDeprecatedOnAbuseLimitHandler ? function (...args) {
     octokit.log.warn("[@octokit/plugin-throttling] `onAbuseLimit()` is deprecated and will be removed in a future release of `@octokit/plugin-throttling`, please use the `onSecondaryRateLimit` handler instead");
     return state.onAbuseLimit(...args);
-  }); // @ts-ignore
+  } : state.onSecondaryRateLimit); // @ts-expect-error
 
-  events.on("rate-limit", state.onRateLimit); // @ts-ignore
+  events.on("rate-limit", state.onRateLimit); // @ts-expect-error
 
-  events.on("error", e => octokit.log.warn("Error in throttling-plugin limit handler", e)); // @ts-ignore
+  events.on("error", e => octokit.log.warn("Error in throttling-plugin limit handler", e)); // @ts-expect-error
 
   state.retryLimiter.on("failed", async function (error, info) {
     const options = info.args[info.args.length - 1];
@@ -10971,7 +10962,7 @@ function throttling(octokit, octokitOptions = {}) {
     options.request.retryCount = retryCount;
     const {
       wantRetry,
-      retryAfter
+      retryAfter = 0
     } = await async function () {
       if (/\bsecondary rate\b/i.test(error.message)) {
         // The user has hit the secondary rate limit. (REST and GraphQL)
@@ -11003,8 +10994,7 @@ function throttling(octokit, octokitOptions = {}) {
     }();
 
     if (wantRetry) {
-      options.request.retryCount++; // @ts-ignore
-
+      options.request.retryCount++;
       return retryAfter * state.retryAfterBaseValue;
     }
   });
