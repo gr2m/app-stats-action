@@ -1111,7 +1111,7 @@ function withDefaults(oldDefaults, newDefaults) {
   });
 }
 
-const VERSION = "7.0.0";
+const VERSION = "7.0.1";
 
 const userAgent = `octokit-endpoint.js/${VERSION} ${universalUserAgent.getUserAgent()}`; // DEFAULTS has all properties set that EndpointOptions has, except url.
 // So we use RequestParameters and add method as additional required property.
@@ -9844,7 +9844,7 @@ var request = __webpack_require__(753);
 var graphql = __webpack_require__(898);
 var authToken = __webpack_require__(813);
 
-const VERSION = "4.0.4";
+const VERSION = "4.0.5";
 
 class Octokit {
   constructor(options = {}) {
@@ -14088,7 +14088,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var BottleneckLight = _interopDefault(__webpack_require__(972));
 
-const VERSION = "4.1.0";
+const VERSION = "4.2.0";
 
 const noop = () => Promise.resolve(); // @ts-expect-error
 
@@ -16065,7 +16065,7 @@ var isPlainObject = __webpack_require__(701);
 var nodeFetch = _interopDefault(__webpack_require__(454));
 var requestError = __webpack_require__(59);
 
-const VERSION = "6.1.0";
+const VERSION = "6.2.1";
 
 function getBufferResponse(response) {
   return response.arrayBuffer();
@@ -16161,7 +16161,7 @@ function fetchWrapper(requestOptions) {
       data
     };
   }).catch(error => {
-    if (error instanceof requestError.RequestError) throw error;
+    if (error instanceof requestError.RequestError) throw error;else if (error.name === "AbortError") throw error;
     throw new requestError.RequestError(error.message, 500, {
       request: requestOptions
     });
@@ -19564,7 +19564,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var request = __webpack_require__(753);
 var universalUserAgent = __webpack_require__(796);
 
-const VERSION = "5.0.0";
+const VERSION = "5.0.1";
 
 function _buildMessageForResponseErrors(data) {
   return `Request failed due to following response errors:\n` + data.errors.map(e => ` - ${e.message}`).join("\n");
