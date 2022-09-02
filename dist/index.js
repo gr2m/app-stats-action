@@ -11656,7 +11656,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var BottleneckLight = _interopDefault(__webpack_require__(972));
 
-const VERSION = "4.2.0";
+const VERSION = "4.3.0";
 
 const noop = () => Promise.resolve(); // @ts-expect-error
 
