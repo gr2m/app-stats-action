@@ -19,7 +19,7 @@
     "@octokit/core": "^4.0.5",
     "@octokit/plugin-paginate-rest": "^4.3.1",
     "@octokit/plugin-retry": "^3.0.9",
-    "@octokit/plugin-throttling": "^4.3.0"
+    "@octokit/plugin-throttling": "^4.3.1"
   },
   "devDependencies": {
     "@semantic-release/git": "^10.0.1",
