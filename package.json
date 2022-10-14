@@ -16,7 +16,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@octokit/auth-app": "^4.0.7",
-    "@octokit/core": "^4.0.5",
+    "@octokit/core": "^4.1.0",
     "@octokit/plugin-paginate-rest": "^5.0.1",
     "@octokit/plugin-retry": "^3.0.9",
     "@octokit/plugin-throttling": "^4.3.1"
