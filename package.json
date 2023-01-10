@@ -22,9 +22,7 @@
     "@octokit/plugin-throttling": "^4.3.2"
   },
   "devDependencies": {
-    "@semantic-release/git": "^10.0.1",
-    "@zeit/ncc": "^0.22.3",
-    "semantic-release": "^19.0.5"
+    "@zeit/ncc": "^0.22.3"
   },
   "release": {
     "branches": [
