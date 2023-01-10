@@ -14,6 +14,7 @@ jobs:
           node-version: lts/*
       - run: npm ci
       - run: npm run build
+      - run: npm install @semantic-release/git
       - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GR2M_PAT_FOR_SEMANTIC_RELEASE }}
