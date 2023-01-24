@@ -19,7 +19,7 @@
     "@octokit/core": "^4.2.0",
     "@octokit/plugin-paginate-rest": "^5.0.1",
     "@octokit/plugin-retry": "^4.0.3",
-    "@octokit/plugin-throttling": "^4.3.2"
+    "@octokit/plugin-throttling": "^5.0.1"
   },
   "devDependencies": {
     "@vercel/ncc": "^0.36.0"
