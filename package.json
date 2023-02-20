@@ -18,7 +18,7 @@
     "@octokit/auth-app": "^4.0.9",
     "@octokit/core": "^4.2.0",
     "@octokit/plugin-paginate-rest": "^6.0.0",
-    "@octokit/plugin-retry": "^4.1.1",
+    "@octokit/plugin-retry": "^4.1.2",
     "@octokit/plugin-throttling": "^5.0.1"
   },
   "devDependencies": {
