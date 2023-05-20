@@ -20,5 +20,5 @@ outputs:
   popular_repositories:
     description: "JSON string for user/organization login and total number of stars of public repositories the app is installed on"
 runs:
-  using: "node12"
+  using: "node16"
   main: "dist/index.js"
