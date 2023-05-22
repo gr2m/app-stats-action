@@ -1,6 +1,11 @@
-"on":
-  - push
 name: Test
+on:
+  push:
+    branches:
+      - main
+  pull_request_target:
+    types: [opened, synchronize]
+
 jobs:
   readmeExample:
     name: "[TEST] README example"
