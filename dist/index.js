@@ -3311,7 +3311,7 @@ var import_graphql = __nccwpck_require__(8467);
 var import_auth_token = __nccwpck_require__(334);
 
 // pkg/dist-src/version.js
-var VERSION = "4.2.1";
+var VERSION = "4.2.4";
 
 // pkg/dist-src/index.js
 var Octokit = class {
@@ -4863,7 +4863,7 @@ async function requestWithGraphqlErrorHandling(state, octokit, request, options)
 }
 
 // pkg/dist-src/index.js
-var VERSION = "5.0.3";
+var VERSION = "5.0.4";
 function retry(octokit, octokitOptions) {
   const state = Object.assign(
     {
