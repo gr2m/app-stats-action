@@ -15,9 +15,14 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm install @semantic-release/git
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: 474182
+          private-key: ${{ secrets.GR2M_SEMANTIC_RELEASE_PRIVATE_KEY }}
       - run: npx semantic-release
         env:
-          GITHUB_TOKEN: ${{ secrets.GR2M_PAT_FOR_SEMANTIC_RELEASE }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
       - run: >-
           git push
           https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
