@@ -11,10 +11,10 @@ jobs:
     name: "[TEST] README example"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 20 # use same as runtime in action.yml
       - run: npm ci
       - run: npm run build
       - name: Get latest release of ${{ github.repository }}
